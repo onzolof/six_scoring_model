@@ -1,5 +1,3 @@
-import collections
-
 import streamlit as st
 
 from model import calculate_normalized_regression_score
@@ -10,7 +8,7 @@ st.set_page_config(
 )
 
 variables = {
-    "effort": {
+    "complexity": {
         "event_type_complexity": {
             "label": "Event Type Complexity",
             "coefficient": "0.2",
@@ -23,20 +21,28 @@ variables = {
         }
     },
     "criticality": {
-
+        "event_type_criticality": {
+            "label": "Event Type Criticality",
+            "coefficient": "0.2",
+            "value": "0.2"
+        },
+        "security_type_criticality": {
+            "label": "Security Type Criticality",
+            "coefficient": "0.05",
+            "value": "0.15"
+        }
     }
 }
-default_values = dict(
-    coeff=dict(
-        event_type_complexity=0.2,
-        security_type_complexity=0.1,
-    )
-)
 
 
-def calculate_effort_score():
-    coefficients, values = get_params("effort")
-    st.session_state["effort_score"] = calculate_normalized_regression_score(coefficients, values)
+def calculate_complexity_score():
+    coefficients, values = get_params("complexity")
+    st.session_state["complexity_score"] = calculate_normalized_regression_score(coefficients, values)
+
+
+def calculate_criticality_score():
+    coefficients, values = get_params("criticality")
+    st.session_state["criticality_score"] = calculate_normalized_regression_score(coefficients, values)
 
 
 def get_params(prefix):
@@ -48,41 +54,68 @@ def get_params(prefix):
     return coefficients, values
 
 
-tab_effort, tab_criticality, tab_prio = st.tabs(["Effort", "Criticality", "Combined"])
+tab_complexity, tab_criticality, tab_prio = st.tabs(["Complexity", "Criticality", "Combined"])
 
-with tab_effort:
-    st.header("Effort Prediction", divider="gray")
-    st.text("Predict the effort of an SWIFT message.")
+with tab_complexity:
+    st.header("Complexity Prediction", divider="gray")
+    st.text("Predict the complexity of an SWIFT message.")
 
-    effort_config = variables["effort"]
+    complexity_config = variables["complexity"]
 
     with st.expander("Coefficients"):
-        st.text(
-            "Define the weight for each feature.This values can either be defined\nqualitatively or learned quantitatively on historical data.",)
+        st.text( "Define the weight for each feature. This values can either be defined\nqualitatively (expert model) or learned quantitatively on historical\ndata (statistical model).")
 
-        st.session_state["effort_constant"] = st.number_input(label="Constant", disabled=True, value=0.0)
+        st.session_state["complexity_constant"] = st.number_input(label="Constant Complexity", disabled=True, value=0.0)
 
-        for key, config in effort_config.items():
-            st.session_state["effort_coeff_" + key] = st.number_input(label=config["label"], min_value=0., max_value=1.,
-                                                                      value=float(config["coefficient"]), step=0.05,
-                                                                      on_change=calculate_effort_score)
+        for key, config in complexity_config.items():
+            st.session_state["complexity_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
+                                                                          max_value=1.,
+                                                                          value=float(config["coefficient"]), step=0.05,
+                                                                          on_change=calculate_complexity_score)
 
     with st.expander("Calculation"):
         st.latex("Define the weight for each feature.")
 
-    for key, config in effort_config.items():
-        st.session_state["effort_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
-                                                            value=float(config["value"]), step=0.05,
-                                                            on_change=calculate_effort_score)
+    for key, config in complexity_config.items():
+        st.session_state["complexity_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
+                                                                value=float(config["value"]), step=0.05,
+                                                                on_change=calculate_complexity_score)
 
-    calculate_effort_score()
+    calculate_complexity_score()
 
-    st.success("Effort Score: " + str(st.session_state["effort_score"]))
+    st.success("Complexity Score: " + str(st.session_state["complexity_score"]))
 
 with tab_criticality:
-    st.header("Criticality Prediction")
+    st.header("Criticality Prediction", divider="gray")
     st.text("Predict the criticality of an event.")
+
+    criticality_config = variables["criticality"]
+
+    with st.expander("Coefficients"):
+        st.text(
+            "Define the weight for each feature. This values can either be defined\nqualitatively (expert model) or learned quantitatively on historical\ndata (statistical model).", )
+
+        st.session_state["criticality_constant"] = st.number_input(label="Constant Criticality", disabled=True, value=0.0)
+
+        for key, config in criticality_config.items():
+            st.session_state["criticality_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
+                                                                           max_value=1.,
+                                                                           value=float(config["coefficient"]),
+                                                                           step=0.05,
+                                                                           on_change=calculate_criticality_score)
+
+    with st.expander("Calculation"):
+        st.latex("Define the weight for each feature.")
+
+    for key, config in criticality_config.items():
+        st.session_state["criticality_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
+                                                                 value=float(config["value"]), step=0.05,
+                                                                 on_change=calculate_criticality_score)
+
+    calculate_criticality_score()
+
+    st.success("Criticality Score: " + str(st.session_state["criticality_score"]))
 
 with tab_prio:
     st.header("Calculating Prioritization Score")
-    st.text("Combine the effort and the criticality predictions into a single score.")
+    st.text("Combine the complexity and the criticality predictions into a single score.")
