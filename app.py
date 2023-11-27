@@ -85,7 +85,7 @@ def calculate_complexity_score():
 def calculate_criticality_score():
     coefficients, values = get_params("criticality")
     st.session_state["criticality_score"] = calculate_normalized_regression_score(coefficients, values)
-    param_names = snake_to_pascal_case(variables["complexity"].keys())
+    param_names = snake_to_pascal_case(variables["criticality"].keys())
     st.session_state["criticality_formula"] = build_regression_formula_in_latex(param_names, coefficients, values)
 
 
