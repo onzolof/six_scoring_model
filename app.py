@@ -58,6 +58,8 @@ variables = {
 
 
 def update_combined_score():
+    calculate_criticality_score()
+    calculate_combined_score()
     update_score_weights()
     complexity_score = st.session_state["complexity_score"]
     complexity_score_weight = st.session_state["weight_complexity_score"]
