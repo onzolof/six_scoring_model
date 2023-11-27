@@ -41,6 +41,11 @@ def calculate_normalized_regression_score(coefficients: list, values: list) -> i
     return normalized_score
 
 
+def calculate_combined_score(s1, s2, w1, w2) -> int:
+    combined_score = w1 * s1 + w2 * s2
+    return int(round(combined_score))
+
+
 def build_regression_formula_in_latex(param_names: list, coefficients: list, values: list) -> str:
     string = r"f_\text{scoring}(\cdot) = \beta_0"
     for i, param_name in enumerate(param_names):
@@ -61,4 +66,12 @@ def build_regression_formula_in_latex(param_names: list, coefficients: list, val
     normalized_score = str(calculate_normalized_regression_score(coefficients, values))
     string += r"\\= " + normalized_score
 
+    return string
+
+
+def build_combining_formula_in_latex(s1, s2, w1, w2) -> str:
+    string = r"f_\text{combining}(\cdot) = round(w_1*s_1 + w_2 * s_2)"
+    string += r"\\=round(" + str(round(w1, 2)) + "* " + str(s1) + "+ " + str(round(w2, 2)) + "* " + str(s2) + ")"
+    combined_score = str(calculate_combined_score(s1, s2, w1, w2))
+    string += r"\\=" + combined_score
     return string

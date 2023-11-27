@@ -1,6 +1,7 @@
 import streamlit as st
 
-from model import calculate_normalized_regression_score, build_regression_formula_in_latex
+from model import calculate_normalized_regression_score, build_regression_formula_in_latex, calculate_combined_score, \
+    build_combining_formula_in_latex
 
 st.set_page_config(
     page_title="Score Calculator",
@@ -34,6 +35,22 @@ variables = {
         }
     }
 }
+
+
+def update_combined_score():
+    update_score_weights()
+    complexity_score = st.session_state["complexity_score"]
+    complexity_score_weight = st.session_state["weight_complexity_score"]
+    criticality_score = st.session_state["criticality_score"]
+    criticality_score_weight = st.session_state["weight_criticality_score"]
+    st.session_state["combined_score"] = calculate_combined_score(complexity_score, criticality_score,
+                                                                  complexity_score_weight, criticality_score_weight)
+    st.session_state["combining_formula"] = build_combining_formula_in_latex(complexity_score, criticality_score, complexity_score_weight, criticality_score_weight)
+
+
+def update_score_weights():
+    complexity_score_weight = st.session_state["weight_complexity_score"]
+    st.session_state["weight_criticality_score"] = 1 - complexity_score_weight
 
 
 def calculate_complexity_score():
@@ -83,10 +100,7 @@ with tab_complexity:
         for key, config in complexity_config.items():
             st.session_state["complexity_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
                                                                           max_value=1.,
-                                                                          value=float(config["coefficient"]), step=0.05,
-                                                                          on_change=calculate_complexity_score)
-
-    calculate_complexity_score()
+                                                                          value=float(config["coefficient"]), step=0.05)
 
     with st.expander("Calculation"):
         if "complexity_formula" in st.session_state:
@@ -94,10 +108,13 @@ with tab_complexity:
 
     for key, config in complexity_config.items():
         st.session_state["complexity_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
-                                                                value=float(config["value"]), step=0.05,
-                                                                on_change=calculate_complexity_score)
+                                                                value=float(config["value"]), step=0.05)
 
-    st.success("Complexity Score: " + str(st.session_state["complexity_score"]))
+    if st.button("Calculate Complexity Score"):
+        calculate_complexity_score()
+
+    if "complexity_score" in st.session_state:
+        st.success("Complexity Score: " + str(st.session_state["complexity_score"]))
 
 with tab_criticality:
     st.header("Criticality Prediction", divider="gray")
@@ -116,10 +133,7 @@ with tab_criticality:
             st.session_state["criticality_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
                                                                            max_value=1.,
                                                                            value=float(config["coefficient"]),
-                                                                           step=0.05,
-                                                                           on_change=calculate_criticality_score)
-
-    calculate_criticality_score()
+                                                                           step=0.05)
 
     with st.expander("Calculation"):
         if "criticality_formula" in st.session_state:
@@ -127,11 +141,31 @@ with tab_criticality:
 
     for key, config in criticality_config.items():
         st.session_state["criticality_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
-                                                                 value=float(config["value"]), step=0.05,
-                                                                 on_change=calculate_criticality_score)
+                                                                 value=float(config["value"]), step=0.05)
 
-    st.success("Criticality Score: " + str(st.session_state["criticality_score"]))
+    if st.button("Calculate Criticality Score"):
+        calculate_criticality_score()
+
+    if "criticality_score" in st.session_state:
+        st.success("Criticality Score: " + str(st.session_state["criticality_score"]))
 
 with tab_prio:
-    st.header("Calculating Prioritization Score")
+    st.header("Calculating Prioritization Score", divider="gray")
     st.text("Combine the complexity and the criticality predictions into a single score.")
+
+    with st.expander("Weights"):
+        st.session_state["weight_complexity_score"] = st.number_input(label="Weight Complexity Score", value=0.7,
+                                                                      step=0.05)
+        if "weight_criticality_score" in st.session_state:
+            st.number_input(label="Weight Criticality Score", disabled=True,
+                            value=st.session_state["weight_criticality_score"])
+
+    with st.expander("Calculation"):
+        if "combining_formula" in st.session_state:
+            st.latex(st.session_state["combining_formula"])
+
+    if st.button("Calculate Combined Score"):
+        update_combined_score()
+
+    if "combined_score" in st.session_state:
+        st.success("Combined Score: " + str(st.session_state["combined_score"]))
