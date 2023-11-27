@@ -20,18 +20,38 @@ variables = {
             "label": "Security Type Complexity",
             "coefficient": "0.05",
             "value": "0.15"
-        }
+        },
+        "text_length": {
+            "label": "Text Length",
+            "coefficient": "0.1",
+            "value": "0.4"
+        },
+        "market_complexity": {
+            "label": "Market Complexity",
+            "coefficient": "0.4",
+            "value": "0.8"
+        },
+        "number_of_subcustodians": {
+            "label": "Number of Subcustodians",
+            "coefficient": "0.1",
+            "value": "0.5"
+        },
     },
     "criticality": {
-        "event_type_criticality": {
-            "label": "Event Type Criticality",
-            "coefficient": "0.2",
-            "value": "0.2"
+        "position_sum": {
+            "label": "Sum of Positions",
+            "coefficient": "0.7",
+            "value": "0.6"
         },
         "security_type_criticality": {
             "label": "Security Type Criticality",
             "coefficient": "0.05",
-            "value": "0.15"
+            "value": "0.3"
+        },
+        "market_volume_of_security": {
+            "label": "Market Volume of Security",
+            "coefficient": "0.05",
+            "value": "0.3"
         }
     }
 }
@@ -45,7 +65,9 @@ def update_combined_score():
     criticality_score_weight = st.session_state["weight_criticality_score"]
     st.session_state["combined_score"] = calculate_combined_score(complexity_score, criticality_score,
                                                                   complexity_score_weight, criticality_score_weight)
-    st.session_state["combining_formula"] = build_combining_formula_in_latex(complexity_score, criticality_score, complexity_score_weight, criticality_score_weight)
+    st.session_state["combining_formula"] = build_combining_formula_in_latex(complexity_score, criticality_score,
+                                                                             complexity_score_weight,
+                                                                             criticality_score_weight)
 
 
 def update_score_weights():
