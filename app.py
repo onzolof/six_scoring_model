@@ -24,18 +24,26 @@ variables = {
         "text_length": {
             "label": "Text Length",
             "coefficient": "0.1",
-            "value": "0.4"
+            "value": "0.4",
+            "help": "Length of the text in the SWIFT message in characters. Values are normalized, thus the value 1 stands for the text length of the longest text ever received, whereas 0 represents the shortest text."
         },
         "market_complexity": {
             "label": "Market Complexity",
             "coefficient": "0.4",
             "value": "0.8"
         },
-        "number_of_subcustodians": {
-            "label": "Number of Subcustodians",
-            "coefficient": "0.1",
-            "value": "0.5"
+        "sender_complexity": {
+            "label": "Sender Complexity",
+            "coefficient": "0.3",
+            "value": "0.5",
         },
+        "message_from_home_market": {
+            "label": "Message from Home Market",
+            "coefficient": "0.2",
+            "type": "dichotomous",
+            "value": "False",
+        },
+
     },
     "criticality": {
         "position_sum": {
@@ -129,8 +137,22 @@ with tab_complexity:
             st.latex(st.session_state["complexity_formula"])
 
     for key, config in complexity_config.items():
-        st.session_state["complexity_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
-                                                                value=float(config["value"]), step=0.05)
+        if "type" in config.keys() and config["type"] == "dichotomous":
+            st.session_state["complexity_value_" + key] = 1 if st.toggle(label=config["label"],
+                                                                         value=bool(config["value"]),
+                                                                         help=help_caption) else 0
+
+        else:
+            min_value = 0.
+            max_value = 1.
+            step_size = round((max_value - min_value) / 20, 2)
+            help_caption = config["help"] if "help" in config.keys() else None
+            st.session_state["complexity_value_" + key] = st.slider(label=config["label"],
+                                                                    min_value=min_value,
+                                                                    max_value=max_value,
+                                                                    value=round(float(config["value"]), 2),
+                                                                    step=step_size,
+                                                                    help=help_caption)
 
     if st.button("Calculate Complexity Score"):
         calculate_complexity_score()
