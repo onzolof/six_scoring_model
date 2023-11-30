@@ -59,12 +59,13 @@ variables = {
             "coefficient": "0.05",
             "value": "0.3"
         },
-        "market_volume_of_security": {
-            "label": "Market Volume of Security",
+        "market_volume_of_isin": {
+            "label": "Market Volume of ISIN",
             "coefficient": "0.05",
             "value": "0.3",
-            "help": "Important markets are more critical than exotic or niche markets."
-        }},
+            "help": "Important ISINs are more critical than exotic or niche ISINs."
+        }
+    },
     "combined": {
         "initial_weight_complexity_score": "0.7"
     },
@@ -72,13 +73,13 @@ variables = {
 
 
 def calc_all_scores():
+    st.toast("Scores were updated")
     calculate_complexity_score()
     calculate_criticality_score()
     update_combined_score()
 
 
 def update_combined_score():
-    update_score_weights()
     complexity_score = st.session_state["complexity_score"]
     complexity_score_weight = st.session_state["weight_complexity_score"]
     criticality_score = st.session_state["criticality_score"]
@@ -88,11 +89,6 @@ def update_combined_score():
     st.session_state["combining_formula"] = build_combining_formula_in_latex(complexity_score, criticality_score,
                                                                              complexity_score_weight,
                                                                              criticality_score_weight)
-
-
-def update_score_weights():
-    complexity_score_weight = st.session_state["weight_complexity_score"]
-    st.session_state["weight_criticality_score"] = 1 - complexity_score_weight
 
 
 def calculate_complexity_score():
@@ -160,6 +156,9 @@ with tab_complexity:
 
     if "complexity_score" in st.session_state:
         st.success("Complexity Score: " + str(st.session_state["complexity_score"]))
+    else:
+        st.button("Calculate Complexity Score", on_click=calc_all_scores)
+
 
 with tab_criticality:
     st.header("Criticality Prediction", divider="gray")
@@ -191,6 +190,9 @@ with tab_criticality:
 
     if "criticality_score" in st.session_state:
         st.success("Criticality Score: " + str(st.session_state["criticality_score"]))
+    else:
+        st.button("Calculate Criticality Score", on_click=calc_all_scores)
+
 
 with tab_prio:
     st.header("Calculating Prioritization Score", divider="gray")
@@ -212,3 +214,5 @@ with tab_prio:
 
     if "combined_score" in st.session_state:
         st.success("Combined Score: " + str(st.session_state["combined_score"]))
+    else:
+        st.button("Calculate Combined Score", on_click=calc_all_scores)
