@@ -14,12 +14,14 @@ variables = {
         "event_type_complexity": {
             "label": "Event Type Complexity",
             "coefficient": "0.2",
-            "value": "0.2"
+            "value": "0.2",
+            "help": "the different even types (such as DRIP, EXOF or TEND) are associated with different complexities."
         },
         "security_type_complexity": {
             "label": "Security Type Complexity",
             "coefficient": "0.05",
-            "value": "0.15"
+            "value": "0.15",
+            "help": "the different security types (such as equity or bonds) are associated with different complexities."
         },
         "text_length": {
             "label": "Text Length",
@@ -38,18 +40,19 @@ variables = {
             "value": "0.5",
         },
         "message_from_home_market": {
-            "label": "Message from Home Market",
+            "label": "Message from Foreign Market",
             "coefficient": "0.2",
             "type": "dichotomous",
             "value": "False",
+            "help": "This flag is true, if the message was sent from a sender which is not located in the securities home market."
         },
-
     },
     "criticality": {
         "position_sum": {
             "label": "Sum of Positions",
             "coefficient": "0.7",
-            "value": "0.6"
+            "value": "0.6",
+            "help": "This value is high, if SIX holds a high position in the underlying security. Because of the normalization, 1 converges towards the highest position SIX every hold historically."
         },
         "security_type_criticality": {
             "label": "Security Type Criticality",
@@ -59,10 +62,19 @@ variables = {
         "market_volume_of_security": {
             "label": "Market Volume of Security",
             "coefficient": "0.05",
-            "value": "0.3"
-        }
-    }
+            "value": "0.3",
+            "help": "Important markets are more critical than exotic or niche markets."
+        }},
+    "combined": {
+        "initial_weight_complexity_score": "0.7"
+    },
 }
+
+
+def calc_all_scores():
+    calculate_complexity_score()
+    calculate_criticality_score()
+    update_combined_score()
 
 
 def update_combined_score():
@@ -109,7 +121,10 @@ def get_params(prefix):
     values = []
     for param_key in variables[prefix].keys():
         coefficients = [*coefficients, st.session_state[prefix + "_coeff_" + param_key]]
-        values = [*values, st.session_state[prefix + "_value_" + param_key]]
+        current_value = st.session_state[prefix + "_value_" + param_key]
+        if isinstance(current_value, bool):
+            current_value = 1. if bool(current_value) else 0.
+        values = [*values, current_value]
     return coefficients, values
 
 
@@ -125,37 +140,23 @@ with tab_complexity:
         st.text(
             "Define the weight for each feature. This values can either be defined\nqualitatively (expert model) or learned quantitatively on historical\ndata (statistical model).")
 
-        st.session_state["complexity_constant"] = st.number_input(label="Constant Complexity", disabled=True, value=0.0)
+        st.number_input(key="complexity_constant", label="Constant Complexity", disabled=True, value=0)
 
         for key, config in complexity_config.items():
-            st.session_state["complexity_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
-                                                                          max_value=1.,
-                                                                          value=float(config["coefficient"]), step=0.05)
+            st.number_input(key=("complexity_coeff_" + key), label=config["label"], min_value=0., max_value=1.,
+                            value=float(config["coefficient"]), step=0.05, on_change=calc_all_scores)
 
     with st.expander("Calculation"):
-        if "complexity_formula" in st.session_state:
-            st.latex(st.session_state["complexity_formula"])
+        st.latex(st.session_state["complexity_formula"] if "complexity_formula" in st.session_state.keys() else "")
 
     for key, config in complexity_config.items():
+        help_caption = config["help"] if "help" in config.keys() else None
         if "type" in config.keys() and config["type"] == "dichotomous":
-            st.session_state["complexity_value_" + key] = 1 if st.toggle(label=config["label"],
-                                                                         value=bool(config["value"]),
-                                                                         help=help_caption) else 0
-
+            st.toggle(key=("complexity_value_" + key), label=config["label"], value=bool(config["value"]),
+                      help=help_caption, on_change=calc_all_scores)
         else:
-            min_value = 0.
-            max_value = 1.
-            step_size = round((max_value - min_value) / 20, 2)
-            help_caption = config["help"] if "help" in config.keys() else None
-            st.session_state["complexity_value_" + key] = st.slider(label=config["label"],
-                                                                    min_value=min_value,
-                                                                    max_value=max_value,
-                                                                    value=round(float(config["value"]), 2),
-                                                                    step=step_size,
-                                                                    help=help_caption)
-
-    if st.button("Calculate Complexity Score"):
-        calculate_complexity_score()
+            st.slider(key=("complexity_value_" + key), label=config["label"], min_value=0., max_value=1.,
+                      value=float(config["value"]), step=0.05, help=help_caption, on_change=calc_all_scores)
 
     if "complexity_score" in st.session_state:
         st.success("Complexity Score: " + str(st.session_state["complexity_score"]))
@@ -168,27 +169,25 @@ with tab_criticality:
 
     with st.expander("Coefficients"):
         st.text(
-            "Define the weight for each feature. This values can either be defined\nqualitatively (expert model) or learned quantitatively on historical\ndata (statistical model).", )
+            "Define the weight for each feature. This values can either be defined\nqualitatively (expert model) or learned quantitatively on historical\ndata (statistical model).")
 
-        st.session_state["criticality_constant"] = st.number_input(label="Constant Criticality", disabled=True,
-                                                                   value=0.0)
+        st.number_input(key="criticality_constant", label="Constant Criticality", disabled=True, value=0)
 
         for key, config in criticality_config.items():
-            st.session_state["criticality_coeff_" + key] = st.number_input(label=config["label"], min_value=0.,
-                                                                           max_value=1.,
-                                                                           value=float(config["coefficient"]),
-                                                                           step=0.05)
+            st.number_input(key=("criticality_coeff_" + key), label=config["label"], min_value=0., max_value=1.,
+                            value=float(config["coefficient"]), step=0.05, on_change=calc_all_scores)
 
     with st.expander("Calculation"):
-        if "criticality_formula" in st.session_state:
-            st.latex(st.session_state["criticality_formula"])
+        st.latex(st.session_state["criticality_formula"] if "criticality_formula" in st.session_state.keys() else "")
 
     for key, config in criticality_config.items():
-        st.session_state["criticality_value_" + key] = st.slider(label=config["label"], min_value=0., max_value=1.,
-                                                                 value=float(config["value"]), step=0.05)
-
-    if st.button("Calculate Criticality Score"):
-        calculate_criticality_score()
+        if "type" in config.keys() and config["type"] == "dichotomous":
+            st.toggle(key=("criticality_value_" + key), label=config["label"], value=bool(config["value"]),
+                      help=help_caption, on_change=calc_all_scores)
+        else:
+            help_caption = config["help"] if "help" in config.keys() else None
+            st.slider(key=("criticality_value_" + key), label=config["label"], min_value=0., max_value=1.,
+                      value=float(config["value"]), step=0.05, help=help_caption, on_change=calc_all_scores)
 
     if "criticality_score" in st.session_state:
         st.success("Criticality Score: " + str(st.session_state["criticality_score"]))
@@ -197,19 +196,19 @@ with tab_prio:
     st.header("Calculating Prioritization Score", divider="gray")
     st.text("Combine the complexity and the criticality predictions into a single score.")
 
+    combined_config = variables["combined"]
+
     with st.expander("Weights"):
-        st.session_state["weight_complexity_score"] = st.number_input(label="Weight Complexity Score", value=0.7,
-                                                                      step=0.05)
-        if "weight_criticality_score" in st.session_state:
-            st.number_input(label="Weight Criticality Score", disabled=True,
-                            value=st.session_state["weight_criticality_score"])
+        complexity_score_weight = st.session_state[
+            "weight_complexity_score"] if "weight_complexity_score" in st.session_state.keys() else float(
+            combined_config["initial_weight_complexity_score"])
+        st.number_input(key="weight_complexity_score", label="Weight Complexity Score", value=complexity_score_weight,
+                        step=0.05, on_change=calc_all_scores, min_value=0., max_value=1.)
+        st.number_input(key="weight_criticality_score", label="Weight Criticality Score", disabled=True,
+                        value=float(1 - st.session_state["weight_complexity_score"]), on_change=calc_all_scores)
 
     with st.expander("Calculation"):
-        if "combining_formula" in st.session_state:
-            st.latex(st.session_state["combining_formula"])
-
-    if st.button("Calculate Combined Score"):
-        update_combined_score()
+        st.latex(st.session_state["combining_formula"] if "combining_formula" in st.session_state.keys() else "")
 
     if "combined_score" in st.session_state:
         st.success("Combined Score: " + str(st.session_state["combined_score"]))
