@@ -52,7 +52,7 @@ variables = {
             "label": "Sum of Positions",
             "coefficient": "0.7",
             "value": "0.6",
-            "help": "This value is high, if SIX holds a high position in the underlying security. Because of the normalization, 1 converges towards the highest position SIX every hold historically."
+            "help": "This value is high, if SIX holds a high position (number of securities multiplied with market value of security) in the underlying security. Because of the normalization, 1 converges towards the highest position SIX every hold historically."
         },
         "security_type_criticality": {
             "label": "Security Type Criticality",
@@ -64,7 +64,20 @@ variables = {
             "coefficient": "0.05",
             "value": "0.3",
             "help": "Important ISINs are more critical than exotic or niche ISINs."
-        }
+        },
+        "open_since_days": {
+            "label": "Open Since n Days",
+            "coefficient": "0.2",
+            "value": "0",
+            "help": "The longer a event is open, the more critical it becomes in this dimension. Due to the normalization of this feature it can be interpreted as following: 1 is incredibly long (highest observation value from historic data) open, 0 means just opened."
+        },
+        "due_date_today": {
+            "label": "Due Today",
+            "coefficient": "0.9",
+            "type": "dichotomous",
+            "value": "False",
+            "help": "This flag becomes true, if today is the deadline for this event."
+        },
     },
     "combined": {
         "initial_weight_complexity_score": "0.7"
