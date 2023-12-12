@@ -219,6 +219,16 @@ with tab_prio:
         st.latex(st.session_state["combining_formula"] if "combining_formula" in st.session_state.keys() else "")
 
     if "combined_score" in st.session_state:
-        st.success("Combined Score: " + str(st.session_state["combined_score"]))
+        score_int = st.session_state["combined_score"]
+        if score_int == 1 or score_int == 2:
+            st.error("Priority Score: Very Low")
+        elif score_int == 3 or score_int == 4:
+            st.error("Priority Score: Low")
+        elif score_int == 5 or score_int == 6:
+            st.warning("Priority Score: Medium")
+        elif score_int == 7 or score_int == 8:
+            st.success("Priority Score: High")
+        else:
+            st.success("Priority Score: Very High")
     else:
         st.button("Calculate Combined Score", on_click=calc_all_scores)
