@@ -13,13 +13,13 @@ variables = {
     "complexity": {
         "event_type_complexity": {
             "label": "Event Type Complexity",
-            "coefficient": "0.2",
+            "coefficient": "0.5",
             "value": "0.2",
             "help": "the different even types (such as DRIP, EXOF or TEND) are associated with different complexities."
         },
         "security_type_complexity": {
             "label": "Security Type Complexity",
-            "coefficient": "0.05",
+            "coefficient": "0.1",
             "value": "0.15",
             "help": "the different security types (such as equity or bonds) are associated with different complexities."
         },
@@ -31,17 +31,17 @@ variables = {
         },
         "market_complexity": {
             "label": "Market Complexity",
-            "coefficient": "0.4",
+            "coefficient": "0.15",
             "value": "0.8"
         },
         "sender_complexity": {
             "label": "Sender Complexity",
-            "coefficient": "0.3",
+            "coefficient": "0.15",
             "value": "0.5",
         },
         "message_from_home_market": {
             "label": "Message from Foreign Market",
-            "coefficient": "0.2",
+            "coefficient": "0.3",
             "type": "dichotomous",
             "value": "False",
             "help": "This flag is true, if the message was sent from a sender which is not located in the securities home market."
@@ -50,34 +50,27 @@ variables = {
     "criticality": {
         "position_sum": {
             "label": "Sum of Positions",
-            "coefficient": "0.7",
+            "coefficient": "0.65",
             "value": "0.6",
             "help": "This value is high, if SIX holds a high position (number of securities multiplied with market value of security) in the underlying security. Because of the normalization, 1 converges towards the highest position SIX every hold historically."
         },
         "security_type_criticality": {
             "label": "Security Type Criticality",
-            "coefficient": "0.05",
+            "coefficient": "0.15",
             "value": "0.3"
         },
         "market_volume_of_isin": {
             "label": "Market Volume of ISIN",
-            "coefficient": "0.05",
+            "coefficient": "0.1",
             "value": "0.3",
             "help": "Important ISINs are more critical than exotic or niche ISINs."
         },
-        "open_since_days": {
-            "label": "Open Since n Days",
-            "coefficient": "0.2",
-            "value": "0",
-            "help": "The longer a event is open, the more critical it becomes in this dimension. Due to the normalization of this feature it can be interpreted as following: 1 is incredibly long (highest observation value from historic data) open, 0 means just opened."
-        },
-        "due_date_today": {
-            "label": "Due Today",
-            "coefficient": "0.9",
-            "type": "dichotomous",
-            "value": "False",
-            "help": "This flag becomes true, if today is the deadline for this event."
-        },
+        "is_due": {
+            "label": "Due Date of Event",
+            "coefficient": "0.8",
+            "value": "0.8",
+            "help": "If a due date (effective date, 'Stichtag') is known, the closer it gets the more critical the event becomes. 0 means, no due date is known or it is far away and 1 means the due date is today."
+        }
     },
     "combined": {
         "initial_weight_complexity_score": "0.7"
